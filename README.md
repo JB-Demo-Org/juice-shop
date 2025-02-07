@@ -10,7 +10,7 @@
 9. Run ``snyk container monitor juice-shop --file=Dockerfile`` to monitor container dependencies in Snyk
 
 **IMPORTANT NOTE**: Running ``npm install`` on your local system is **NOT needed** and likely won't work if you're on the newest version of Node (see Node compatibility chart below)
-
+test
 **Original readme**
 
 # ![Juice Shop Logo](https://raw.githubusercontent.com/bkimminich/juice-shop/master/frontend/src/assets/public/images/JuiceShop_Logo_100px.png) OWASP Juice Shop
