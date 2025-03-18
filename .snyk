@@ -1,0 +1,6 @@
+# Snyk (https://snyk.io) policy file
+---
+exclude:
+    global:
+        # Exclude a single file. For example, - test.spec.js
+        - likeProductReviews.js
