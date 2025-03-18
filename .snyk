@@ -4,3 +4,9 @@ exclude:
     global:
         # Exclude a single file. For example, - test.spec.js
         - likeProductReviews.js
+ignore:
+  SNYK-JS-NODESASS-535500:
+    - '*':
+        reason: test
+        expires: 2025-03-19T00:00:00.000Z
+        created: 2025-03-18T13:15:28.308Z
