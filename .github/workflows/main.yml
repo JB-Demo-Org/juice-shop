@@ -18,7 +18,5 @@ jobs:
       - name: setup Snyk
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk auth "$SNYK_TOKEN"
+        run: SNYK_TOKEN="$SNYK_TOKEN" snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --severity-threshold=high
 
-      - name: Snyk OS Scanning
-        run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --severity-threshold=high
