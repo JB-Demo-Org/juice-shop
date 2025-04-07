@@ -1,0 +1,24 @@
+name: demo CI/CD snyk scan
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: set up node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.4
+
+      - run : npm install --location=global snyk
+
+      - name: setup Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth "$SNYK_TOKEN"
+
+      - name: Snyk OS Scanning
+        run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --severity-threshold=high
