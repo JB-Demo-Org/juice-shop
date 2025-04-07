@@ -18,5 +18,7 @@ jobs:
       - name: setup Snyk
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: SNYK_TOKEN="$SNYK_TOKEN" snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --severity-threshold=high
+        run: |
+          export SNYK_TOKEN="$SNYK_TOKEN" 
+          snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --severity-threshold=high
 
