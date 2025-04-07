@@ -9,6 +9,7 @@ jobs:
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_ORG: $${{ secrets.SNYK_ORG }}
         with:
-          args: --severity-threshold=high --org={{ secrets.SNYK_ORG }}
+          args: --severity-threshold=high --org=$SNYK_ORG
 
