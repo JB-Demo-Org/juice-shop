@@ -32,7 +32,7 @@ jobs:
             "query": {
               "attributes": {
                 "attributes": "respository_url",
-                "operator": "contains",
+                "operator": "equals",
                 "values": [
                   f"https://github.com/{repo_url}"
                 ]
