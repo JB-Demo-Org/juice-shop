@@ -34,10 +34,11 @@ jobs:
                     }
                   }
                })
-
-             response = request.post(url, headers=headers, data=payload)
-             response.raise_for_status()
-             data = response.json()
+               
+               response = request.post(url, headers=headers, data=payload)
+               response.raise_for_status()
+               data = response.json()
+               
 
              org_ids = set()
              for repo in data.get("data", []):
