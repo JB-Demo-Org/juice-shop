@@ -22,19 +22,18 @@ jobs:
           import os
 
           def get_orgs(headers, group_id, repo_url):
-              print("Searching assets API...")
               url = f"https://api.snyk.io/closed-beta/groups/{group_id}/assets/search?version=2024-10-15"
               payload = json.dumps({
-                "query": {
-                  "attributes": {
-                    "attribute": "repository_url",
-                    "operator": "contains",
-                    "values": [
-                      f"https://github.com/{repo_url}"
-                    ]
+                  "query": {
+                    "attributes": {
+                      "attribute": "repository_url",
+                      "operator": "contains",
+                      "values": [
+                        f"https://github.com/{repo_url}"
+                      ]
+                    }
                   }
-                }
-             })
+               })
 
              response = request.post(url, headers=headers, data=payload)
              response.raise_for_status()
