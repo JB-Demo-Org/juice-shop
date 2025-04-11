@@ -8,11 +8,11 @@ jobs:
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       GROUP_ID: ${{ secrets.GROUP_ID }}
-      REPO_URL: $$ {{ github.repository }}
+      REPO_URL: ${{ github.repository }}
     steps:
       - name: snf
         run: |
-          python3 <<EOF
+          python3 <<'EOF'
           import requests
           import json
           import sys
