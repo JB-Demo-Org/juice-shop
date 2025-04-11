@@ -23,23 +23,25 @@ jobs:
           repo_url = os.environ["REPO_URL"]
 
           url = f"https://api.snyk.io/closed-beta/groups/{group_id}/assets/search?version=2024-10-15"
-          headers = {
-              "authorization": token,
-              "accept": "application/vnd.api+json",
-              "Content-Type": "application/json"
-          }
+
           payload = json.dumps({
             "query": {
               "attributes": {
-                "attributes": "respository_url",
-                "operator": "equals",
+                "attribute": "repository_url",
+                "operator": "contains",
                 "values": [
                   f"https://github.com/{repo_url}"
                 ]
               }
             }
           })
+          headers = {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          }
+
           response = requests.request("POST", url, headers=headers, data=payload)
-          print (response.text)
+
+          print(response.text)
 
           EOF
