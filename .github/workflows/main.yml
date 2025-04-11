@@ -1,14 +1,39 @@
-name: Example workflow for Node using Snyk
-on: push
+name: SNF Test
+
+on: workflow_dispatch
+
 jobs:
-  security:
+  SNF:
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      GROUP_ID: ${{ secrets.GROUP_ID }}
+      REPO_URL: $$ {{ github.repository }}
     steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          SNYK_ORG: $${{ secrets.SNYK_ORG }}
-        with:
-          args: --severity-threshold=high
+      - name: snf
+        run: |
+          python3 <<EOF
+          import requests
+          import json
+          import sys
+
+          token = os.environ["SNYK_TOKEN"]
+          group_id = os.environ["GROUP_ID"]
+          repo_url = os.environ["REPO_URL"]
+
+          url = f"https://api.snyk.io/closed-beta/groups/{group_id}/assets/search?version=2024-10-15"
+          headers = {
+              "authorization": token,
+              "accept": "application/vnd.api+json"
+              "content-type": "application/json"
+          }
+          payload = json.dumps({
+            "query": {
+              "attributes": {
+                "attributes": "respository_url",
+                "operator": "contains",
+                "values": [
+                  f"https://github.com/{repo_url}"
+                ]
+          response = requests.request("POST", url, headers=headers, data=payload)
+          print (response.text)
