@@ -25,7 +25,7 @@ jobs:
           headers = {
               "authorization": token,
               "accept": "application/vnd.api+json"
-              "content-type": "application/json"
+              "Content-Type": "application/json"
           }
           payload = json.dumps({
             "query": {
