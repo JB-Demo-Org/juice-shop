@@ -24,7 +24,7 @@ jobs:
           url = f"https://api.snyk.io/closed-beta/groups/{group_id}/assets/search?version=2024-10-15"
           headers = {
               "authorization": token,
-              "accept": "application/vnd.api+json"
+              "accept": "application/vnd.api+json",
               "Content-Type": "application/json"
           }
           payload = json.dumps({
