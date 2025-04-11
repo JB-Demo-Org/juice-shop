@@ -16,6 +16,7 @@ jobs:
           import requests
           import json
           import sys
+          import os
 
           token = os.environ["SNYK_TOKEN"]
           group_id = os.environ["GROUP_ID"]
