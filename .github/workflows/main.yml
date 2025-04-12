@@ -16,104 +16,103 @@ jobs:
       - name: snf
         run: |
           python3 <<'EOF'
-import requests
-import json
-import sys
-import os
+          import requests
+          import json
+          import sys
+          import os
 
-def get_orgs(headers, group_id, repo_url):
-    url = f"https://api.snyk.io/closed-beta/groups/{group_id}/assets/search?version=2024-10-15"
-    payload = json.dumps({
-        "query": {
-          "attributes": {
-            "attribute": "repository_url",
-            "operator": "contains",
-            "values": [
-              f"https://github.com/{repo_url}"
-            ]
-          }
-        }
-      })
+          def get_orgs(headers, group_id, repo_url):
+              url = f"https://api.snyk.io/closed-beta/groups/{group_id}/assets/search?version=2024-10-15"
+              payload = json.dumps({
+                  "query": {
+                      "attributes": {
+                          "attribute": "repository_url",
+                          "operator": "contains",
+                          "values": [
+                              f"https://github.com/{repo_url}"
+                          ]
+                      }
+                  }
+              })
 
-      response = requests.post(url, headers=headers, data=payload)
-      response.raise_for_status()
-      data = response.json()
+              response = requests.post(url, headers=headers, data=payload)
+              response.raise_for_status()
+              data = response.json()
 
+              org_ids = set()
+              for repo in data.get("data", []):
+                  for org in repo.get("attributes", {}).get("organizations", []):
+                      org_ids.add(org["id"])
+              return list(org_ids)
 
-      org_ids = set()
-      for repo in data.get("data", []):
-        for org in repo.get("attributes", {}).get("organizations", []):
-              org_ids.add(org["id"])
-      return list(org_ids)
+          def filter_orgs_with_valid_integrations(headers, org_ids):
+              valid_org_ids = []
+              for org_id in org_ids:
+                  url = f"https://api.snyk.io/rest/orgs/{org_id}/targets?version=2024-10-15&display_name={repo_name}"
+                  response = requests.get(url, headers=headers)
+                  response.raise_for_status()
+                  data = response.json()
 
-def filter_orgs_with_valid_integrations(headers, org_ids):
-    valid_org_ids = []
-    for org_id in org_ids:
-        url = f"https://api.snyk.io/rest/orgs/{org_id}/targets?version=2024-10-15&display_name={repo_name}"
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
+                  discard = False
+                  for target in data.get("data", []):
+                      integration = target.get("relationships", {}).get("integration", {}).get("data", {})
+                      if integration.get("attributes", {}).get("integration_type") == "cli":
+                          discard = True
+                          break
+                  if not discard:
+                      valid_org_ids.append(org_id)
+              return valid_org_ids
 
-        discard = False
-        for target in data.get("data", []):
-            integration = target.get("relationships", {}).get("integration", {}).get("data", {})
-            if integration.get("attributes", {}).get("integration_type") == "cli":
-                discard = True
-                break
-        if not discard:
-            valid_org_ids.append(org_id)
-    return valid_org_ids
+          def get_github_app_integration_id(headers, org_id):
+              url = f"https://api.snyk.io/v1/org/{org_id}/integrations/github-cloud-app"
+              response = requests.get(url, headers=headers)
+              response.raise_for_status()
+              return response.json().get("id")
 
-def get_github_app_integration_id(headers, org_id):
-    url = f"https://api.snyk.io/v1/org/{org_id}/integrations/github-cloud-app"
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json().get("id")
+          def import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch):
+              url = f"https://api.snyk.io/v1/org/{org_id}/integrations/{integration_id}/import"
+              payload = {
+                  "target": {
+                      "owner": repo_owner,
+                      "name": repo_name,
+                      "branch": branch
+                  }
+              }
 
-def import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch):
-    url = f"https://api.snyk.io/v1/org/{org_id}/integrations/{integration_id}/import"
-    payload = {
-        "target": {
-            "owner": repo_owner,
-            "name": repo_name,
-            "branch": branch
-        }
-    }
+              response = requests.post(url, headers=headers, data=json.dumps(payload))
+              response.raise_for_status()
+              return response.json()
 
-    response = requests.post(url, headers=headers, data=json.dumps(payload))
-    response.raise_for_status()
-    return response.json()
+          def main():
+            token = os.environ["SNYK_TOKEN"]
+            group_id = os.environ["GROUP_ID"]
+            repo_url = os.environ["REPO_URL"]
+            repo_name = os.environ["TARGET_NAME"]
 
-def main():
-  token = os.environ["SNYK_TOKEN"]
-  group_id = os.environ["GROUP_ID"]
-  repo_url = os.environ["REPO_URL"]
-  repo_name = os.environ["TARGET_NAME"]
+            headers = {
+                "Authorization": token,
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.api+json"
+            }
 
-  headers = {
-      "Authorization": token,
-      "Content-Type": "application/json",
-      "Accept": "application/vnd.api+json"
-  }
+            print("Searching for orgs from asset API search...")
+            org_ids = get_orgs(headers, group_id, repo_url)
 
-  print("Searching for orgs from asset API search...")
-  org_ids = get_orgs(headers, group_id, repo_url)
+            print("Filtering out CLI targets...")
+            valid_org_ids = filter_orgs_with_valid_integrations(headers, org_ids)
 
-  print("Filtering out CLI targets...")
-  valid_org_ids = filter_orgs_with_valid_integrations(headers, org_ids)
+            for org_id in valid_org_ids:
+                print(f"Getting Github Cloud App Integration ID for org {org_id}...")
+                integration_id = get_github_app_integration_id(headers, org_id)
 
-  for org_id in valid_org_ids:
-      print(f"Getting Github Cloud App Integration ID for org {org_id}...")
-      integration_id = get_github_app_integration_id(headers, org_id)
+                repo_owner = os.environ["TARGET_OWNER"]
+                branch = os.environ["TARGET_BRANCH"]
 
-      repo_owner = os.environ["TARGET_OWNER"]
-      branch = os.environ["TARGET_BRANCH"]
+                print(f"Importing repo {repo_name} to org {org_id}...")
+                import_result = import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch)
+                print(json.dumps(import_result, indent=2))
 
-      print(f"Importing repo {repo_name} to org {org_id}...")
-      import_result = import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch)
-      print(json.dumps(import_result, indent=2))
+          if __name__ == "__main__":
+              main()
 
-if __name__ == "__main__":
-    main()
-
-EOF
+          EOF
