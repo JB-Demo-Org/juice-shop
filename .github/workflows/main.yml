@@ -45,7 +45,7 @@ jobs:
                       org_ids.add(org["id"])
               return list(org_ids)
 
-          def filter_orgs_with_valid_integrations(headers, org_ids):
+          def filter_orgs_with_valid_integrations(headers, org_ids, repo_name):
               valid_org_ids = []
               for org_id in org_ids:
                   url = f"https://api.snyk.io/rest/orgs/{org_id}/targets?version=2024-10-15&display_name={repo_name}"
