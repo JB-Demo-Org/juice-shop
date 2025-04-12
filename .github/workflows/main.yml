@@ -99,7 +99,7 @@ jobs:
             org_ids = get_orgs(headers, group_id, repo_url)
 
             print("Filtering out CLI targets...")
-            valid_org_ids = filter_orgs_with_valid_integrations(headers, org_ids)
+            valid_org_ids = filter_orgs_with_valid_integrations(headers, org_ids, repo_name)
 
             for org_id in valid_org_ids:
                 print(f"Getting Github Cloud App Integration ID for org {org_id}...")
