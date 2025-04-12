@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: snf
         run: |
-          python3 <<'EOF'
+          python3 <<'EOF' > snf.py
           import requests
           import json
           import sys
@@ -117,3 +117,5 @@ jobs:
               main()
 
           EOF
+
+          python3 snf.py
