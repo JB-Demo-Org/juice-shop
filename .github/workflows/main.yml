@@ -34,17 +34,17 @@ jobs:
                     }
                   }
                })
-               
-               response = request.post(url, headers=headers, data=payload)
+
+               response = requests.post(url, headers=headers, data=payload)
                response.raise_for_status()
                data = response.json()
-               
 
-             org_ids = set()
-             for repo in data.get("data", []):
-                 for org in repo.get("attributes", {}).get("organizations", []):
-                 org_ids.add(org["id"])
-             return list(org_ids)
+
+               org_ids = set()
+               for repo in data.get("data", []):
+                   for org in repo.get("attributes", {}).get("organizations", []):
+                       org_ids.add(org["id"])
+               return list(org_ids)
 
           def filter_orgs_with_valid_integrations(headers, org_ids):
               valid_org_ids = []
@@ -55,15 +55,15 @@ jobs:
                   data = response.json()
 
                   discard = False
-                  for target in data.get("data" []):
+                  for target in data.get("data", []):
                       integration = target.get("relationships", {}).get("integration", {}).get("data", {})
                       if integration.get("attributes", {}).get("integration_type") == "cli":
                           discard = True
                           break
-                      if not discard:
-                        valid_org_ids.append(org_id)
-                return valid_org_ids
-                
+                  if not discard:
+                      valid_org_ids.append(org_id)
+              return valid_org_ids
+
           def get_github_app_integration_id(headers, org_id):
               url = f"https://api.snyk.io/v1/org/{org_id}/integrations/github-cloud-app"
               response = requests.get(url, headers=headers)
@@ -71,11 +71,11 @@ jobs:
               return response.json().get("id")
 
           def import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch):
-              url = f"https://api.snyk.io/v1/org/{org_id}/integrations/{integrations_id/import"
+              url = f"https://api.snyk.io/v1/org/{org_id}/integrations/{integration_id}/import"
               payload = {
                   "target": {
                       "owner": repo_owner,
-                      "name" repo_name,
+                      "name": repo_name,
                       "branch": branch
                   }
               }
@@ -88,10 +88,11 @@ jobs:
             token = os.environ["SNYK_TOKEN"]
             group_id = os.environ["GROUP_ID"]
             repo_url = os.environ["REPO_URL"]
+            repo_name = os.environ["TARGET_NAME"]
 
             headers = {
-                "Authorization": token
-                "Content-Type": "application/json"
+                "Authorization": token,
+                "Content-Type": "application/json",
                 "Accept": "application/vnd.api+json"
             }
 
@@ -99,21 +100,20 @@ jobs:
             org_ids = get_orgs(headers, group_id, repo_url)
 
             print("Filtering out CLI targets...")
-            filter_orgs_with_valid_integrations(headers, org_ids)
+            valid_org_ids = filter_orgs_with_valid_integrations(headers, org_ids)
 
             for org_id in valid_org_ids:
-                print("Getting Github Cloud App Integration ID for org {org_id}...")
+                print(f"Getting Github Cloud App Integration ID for org {org_id}...")
                 integration_id = get_github_app_integration_id(headers, org_id)
 
-                repo_owner = os.environ["TARGET_OWNER]
-                repo_name = os.environ["TARGET_NAME"]
-                branch = "master"
+                repo_owner = os.environ["TARGET_OWNER"]
+                branch = os.environ["TARGET_BRANCH"]
 
                 print(f"Importing repo {repo_name} to org {org_id}...")
                 import_result = import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch)
                 print(json.dumps(import_result, indent=2))
 
-           if __name__ == "__main__":
-               main()
+          if __name__ == "__main__":
+              main()
 
           EOF
