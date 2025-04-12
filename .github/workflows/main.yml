@@ -90,8 +90,8 @@ jobs:
             repo_name = os.environ["TARGET_NAME"]
 
             headers = {
-                "authorization": token,
-                "accept": "application/vnd.api+json"
+                "Authorization": token,
+                "Accept": "application/vnd.api+json"
             }
 
             print("Searching for orgs from asset API search...")
