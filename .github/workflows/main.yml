@@ -49,7 +49,7 @@ jobs:
               valid_org_ids = []
               for org_id in org_ids:
                   url = f"https://api.snyk.io/rest/orgs/{org_id}/targets?version=2024-10-15&display_name={repo_name}"
-                  response = requests.get(url, headers=headers)
+                  response = requests.requests("GET", url, headers=headers)
                   response.raise_for_status()
                   data = response.json()
 
