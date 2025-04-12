@@ -92,6 +92,7 @@ jobs:
             headers = {
                 "Authorization": token,
                 "Accept": "application/vnd.api+json"
+                "Contet-Type": "application/json"
             }
 
             print("Searching for orgs from asset API search...")
