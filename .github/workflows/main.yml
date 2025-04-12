@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: snf
         run: |
-          cat > snf.py <<EOF
+          python3 <<'EOF'
 import requests
 import json
 import sys
@@ -117,5 +117,3 @@ if __name__ == "__main__":
     main()
 
 EOF
-  
-          python3 snf.py
