@@ -56,7 +56,7 @@ jobs:
                   response.raise_for_status()
                   data = response.json()
                   
-                  if data.get("data")
+                  if data.get("data"):
                       valid_org_ids.append(org_id)
               return valid_org_ids
 
