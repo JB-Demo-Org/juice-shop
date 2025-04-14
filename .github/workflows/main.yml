@@ -63,13 +63,13 @@ jobs:
                       valid_org_ids.append(org_id)
               return valid_org_ids
 
-          def get_github_app_integration_id(headers, org_id):
+          def get_github_app_integration_id(headers_v1, org_id):
               url = f"https://api.snyk.io/v1/org/{org_id}/integrations/github-cloud-app"
-              response = requests.get(url, headers=headers)
+              response = requests.get(url, headers=headers_v1)
               response.raise_for_status()
               return response.json().get("id")
 
-          def import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch):
+          def import_repo(headers_v1, org_id, integration_id, repo_owner, repo_name, branch):
               url = f"https://api.snyk.io/v1/org/{org_id}/integrations/{integration_id}/import"
               payload = {
                   "target": {
@@ -79,7 +79,7 @@ jobs:
                   }
               }
 
-              response = requests.post(url, headers=headers, data=json.dumps(payload))
+              response = requests.post(url, headers=headers_v1, data=json.dumps(payload))
               response.raise_for_status()
               return response.json()
 
@@ -95,6 +95,10 @@ jobs:
                 "Accept": "application/vnd.api+json"
             }
 
+            headers_v1 = {
+                "Authorization": token,
+                "Content-Type": "application/json"
+
             print("Searching for orgs from asset API search...")
             org_ids = get_orgs(headers, group_id, repo_url)
             print("Org IDs from asset search:", org_ids)
@@ -105,13 +109,13 @@ jobs:
 
             for org_id in valid_org_ids:
                 print(f"Getting Github Cloud App Integration ID for org {org_id}...")
-                integration_id = get_github_app_integration_id(headers, org_id)
+                integration_id = get_github_app_integration_id(headers_v1, org_id)
 
                 repo_owner = os.environ["TARGET_OWNER"]
                 branch = os.environ["TARGET_BRANCH"]
 
                 print(f"Importing repo {repo_name} to org {org_id}...")
-                import_result = import_repo(headers, org_id, integration_id, repo_owner, repo_name, branch)
+                import_result = import_repo(headers_v1, org_id, integration_id, repo_owner, repo_name, branch)
                 print(json.dumps(import_result, indent=2))
 
           if __name__ == "__main__":
