@@ -97,9 +97,11 @@ jobs:
 
             print("Searching for orgs from asset API search...")
             org_ids = get_orgs(headers, group_id, repo_url)
+            print("Org IDs from asset search:", org_ids)
 
             print("Filtering out CLI targets...")
             valid_org_ids = filter_orgs_with_valid_integrations(headers, org_ids, repo_name)
+            print("valid orgs:", valid_org_ids)
 
             for org_id in valid_org_ids:
                 print(f"Getting Github Cloud App Integration ID for org {org_id}...")
