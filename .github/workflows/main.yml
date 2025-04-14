@@ -98,6 +98,7 @@ jobs:
             headers_v1 = {
                 "Authorization": token,
                 "Content-Type": "application/json"
+            }
 
             print("Searching for orgs from asset API search...")
             org_ids = get_orgs(headers, group_id, repo_url)
