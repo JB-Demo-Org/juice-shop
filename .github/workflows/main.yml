@@ -51,18 +51,12 @@ jobs:
           def filter_orgs_with_valid_integrations(headers, org_ids, repo_name):
               valid_org_ids = []
               for org_id in org_ids:
-                  url = f"https://api.snyk.io/rest/orgs/{org_id}/targets?version=2024-10-15&display_name={repo_name}"
+                  url = f"https://api.snyk.io/rest/orgs/{org_id}/targets?version=2024-10-15&source_type=github-cloud-app&display_name={repo_name}"
                   response = requests.get(url, headers=headers)
                   response.raise_for_status()
                   data = response.json()
-
-                  discard = False
-                  for target in data.get("data", []):
-                      integration = target.get("relationships", {}).get("integration", {}).get("data", {})
-                      if integration.get("attributes", {}).get("integration_type") == "cli":
-                          discard = True
-                          break
-                  if not discard:
+                  
+                  if data.get("data")
                       valid_org_ids.append(org_id)
               return valid_org_ids
 
