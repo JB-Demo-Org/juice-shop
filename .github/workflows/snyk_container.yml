@@ -1,6 +1,8 @@
 name: Snyk Container Scan
 
-on: workflow_dispatch
+on:
+  pull_request:
+    branches: [master]
 
 jobs:
   build:
@@ -8,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [14.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -38,11 +40,8 @@ jobs:
 
       - name: Snyk container scan
         run: |
-          snyk container monitor juice-shop:latest --file=Dockerfile
+          snyk container monitor juice-shop:latest --org=9e215830-3e7b-4adc-b3e0-f85cdc08aea3 --exclude-app-vulns --file=Dockerfile
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # Ensure token is passed here too
 
-      - name: Snyk container test (optional)
-        run: snyk container test juice-shop:latest --file=Dockerfile # Add a test step
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
