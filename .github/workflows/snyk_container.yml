@@ -1,0 +1,49 @@
+name: Snyk Container Scan
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Install Snyk CLI
+        run: npm i -g snyk
+
+      - name: Verify Snyk CLI Installation
+        run: snyk --version
+
+      - name: Set up Snyk authentication
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build . -t juice-shop:latest
+          docker images # List images to confirm build
+
+      - name: Snyk container scan
+        run: |
+          snyk container monitor juice-shop:latest --file=Dockerfile
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # Ensure token is passed here too
+
+      - name: Snyk container test (optional)
+        run: snyk container test juice-shop:latest --file=Dockerfile # Add a test step
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
