@@ -43,7 +43,9 @@ export class DataExportComponent implements OnInit {
 
   getNewCaptcha () {
     this.imageCaptchaService.getCaptcha().subscribe((data: any) => {
-      this.captcha = this.sanitizer.bypassSecurityTrustHtml(data.image)
+      // Sanitize captcha image data to prevent XSS
+      const sanitizedImage = this.sanitizeHtml(data.image)
+      this.captcha = this.sanitizer.bypassSecurityTrustHtml(sanitizedImage)
     })
   }
 
@@ -56,7 +58,8 @@ export class DataExportComponent implements OnInit {
       this.error = null
       this.confirmation = data.confirmation
       this.userData = data.userData
-      window.open('', '_blank', 'width=500')!.document.write(this.userData)
+      // Fix DOM-based XSS: Use safe approach instead of document.write with unsanitized data
+      this.displayUserDataSafely(this.userData)
       this.lastSuccessfulTry = new Date()
       localStorage.setItem('lstdtxprt',JSON.stringify(this.lastSuccessfulTry))
       this.ngOnInit()
@@ -81,5 +84,28 @@ export class DataExportComponent implements OnInit {
     this.captchaControl.markAsUntouched()
     this.captchaControl.markAsPristine()
     this.captchaControl.setValue('')
+  }
+
+  // Safe method to display user data without XSS vulnerability
+  private displayUserDataSafely(userData: string) {
+    const sanitizedData = this.sanitizeHtml(userData)
+    const blob = new Blob([sanitizedData], { type: 'text/html' })
+    const url = window.URL.createObjectURL(blob)
+    const newWindow = window.open(url, '_blank', 'width=500')
+    if (newWindow) {
+      newWindow.onload = () => {
+        window.URL.revokeObjectURL(url)
+      }
+    }
+  }
+
+  // HTML sanitization method to prevent XSS
+  private sanitizeHtml(html: string): string {
+    if (!html) return ''
+    
+    // Create a temporary DOM element to safely parse and sanitize HTML
+    const div = document.createElement('div')
+    div.textContent = html
+    return div.innerHTML
   }
 }

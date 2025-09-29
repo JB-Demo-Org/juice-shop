@@ -77,12 +77,24 @@ export class AboutComponent implements OnInit {
   populateSlideshowFromFeedbacks () {
     this.feedbackService.find().subscribe((feedbacks) => {
       for (let i = 0; i < feedbacks.length; i++) {
-        feedbacks[i].comment = '<span style="width: 90%; display:block;">' + feedbacks[i].comment + '<br/>' + ' (' + this.stars[feedbacks[i].rating] + ')' + '</span>'
+        // Sanitize feedback comment to prevent XSS
+        const sanitizedComment = this.sanitizeHtml(feedbacks[i].comment)
+        feedbacks[i].comment = '<span style="width: 90%; display:block;">' + sanitizedComment + '<br/>' + ' (' + this.stars[feedbacks[i].rating] + ')' + '</span>'
         feedbacks[i].comment = this.sanitizer.bypassSecurityTrustHtml(feedbacks[i].comment)
         this.slideshowDataSource.push({ url: this.images[i % this.images.length], caption: feedbacks[i].comment })
       }
     },(err) => {
       console.log(err)
     })
+  }
+
+  // HTML sanitization method to prevent XSS
+  private sanitizeHtml(html: string): string {
+    if (!html) return ''
+    
+    // Create a temporary DOM element to safely parse and sanitize HTML
+    const div = document.createElement('div')
+    div.textContent = html
+    return div.innerHTML
   }
 }

@@ -39,7 +39,9 @@ export class TrackResultComponent implements OnInit {
   ngOnInit () {
     this.orderId = this.route.snapshot.queryParams.id
     this.trackOrderService.save(this.orderId).subscribe((results) => {
-      this.results.orderNo = this.sanitizer.bypassSecurityTrustHtml(`<code>${results.data[0].orderId}</code>`)
+      // Sanitize order ID to prevent XSS
+      const sanitizedOrderId = this.sanitizeHtml(results.data[0].orderId)
+      this.results.orderNo = this.sanitizer.bypassSecurityTrustHtml(`<code>${sanitizedOrderId}</code>`)
       this.results.email = results.data[0].email
       this.results.totalPrice = results.data[0].totalPrice
       this.results.products = results.data[0].products
@@ -56,5 +58,15 @@ export class TrackResultComponent implements OnInit {
         this.status = Status.Transit
       }
     })
+  }
+
+  // HTML sanitization method to prevent XSS
+  private sanitizeHtml(html: string): string {
+    if (!html) return ''
+    
+    // Create a temporary DOM element to safely parse and sanitize HTML
+    const div = document.createElement('div')
+    div.textContent = html
+    return div.innerHTML
   }
 }

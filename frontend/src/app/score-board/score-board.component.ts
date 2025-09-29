@@ -165,7 +165,9 @@ export class ScoreBoardComponent implements OnInit {
   }
 
   trustDescriptionHtml (challenge: Challenge) {
-    challenge.description = this.sanitizer.bypassSecurityTrustHtml(challenge.description as string)
+    // Sanitize challenge description to prevent XSS
+    const sanitizedDescription = this.sanitizeHtml(challenge.description as string)
+    challenge.description = this.sanitizer.bypassSecurityTrustHtml(sanitizedDescription)
   }
 
   calculateProgressPercentage () {
@@ -342,5 +344,15 @@ export class ScoreBoardComponent implements OnInit {
 
   restoreBackup (file: File) {
     this.localBackupService.restore(file)
+  }
+
+  // HTML sanitization method to prevent XSS
+  private sanitizeHtml(html: string): string {
+    if (!html) return ''
+    
+    // Create a temporary DOM element to safely parse and sanitize HTML
+    const div = document.createElement('div')
+    div.textContent = html
+    return div.innerHTML
   }
 }

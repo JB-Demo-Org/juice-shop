@@ -141,7 +141,9 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
         this.io.socket().emit('verifyLocalXssChallenge', queryParam)
       })
       this.dataSource.filter = queryParam.toLowerCase()
-      this.searchValue = this.sanitizer.bypassSecurityTrustHtml(queryParam)
+      // Sanitize query parameter to prevent XSS
+      const sanitizedQueryParam = this.sanitizeHtml(queryParam)
+      this.searchValue = this.sanitizer.bypassSecurityTrustHtml(sanitizedQueryParam)
       this.gridDataSource.subscribe((result: any) => {
         if (result.length === 0) {
           this.emptyState = true
@@ -248,5 +250,15 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
 
   isDeluxe () {
     return this.deluxeGuard.isDeluxe()
+  }
+
+  // HTML sanitization method to prevent XSS
+  private sanitizeHtml(html: string): string {
+    if (!html) return ''
+    
+    // Create a temporary DOM element to safely parse and sanitize HTML
+    const div = document.createElement('div')
+    div.textContent = html
+    return div.innerHTML
   }
 }

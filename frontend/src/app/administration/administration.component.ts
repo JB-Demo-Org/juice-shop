@@ -49,7 +49,9 @@ export class AdministrationComponent implements OnInit {
       this.userDataSource = users
       this.userDataSourceHidden = users
       for (let user of this.userDataSource) {
-        user.email = this.sanitizer.bypassSecurityTrustHtml(`<span class="${user.token ? 'confirmation' : 'error'}">${user.email}</span>`)
+        // Sanitize user email to prevent XSS
+        const sanitizedEmail = this.sanitizeHtml(user.email)
+        user.email = this.sanitizer.bypassSecurityTrustHtml(`<span class="${user.token ? 'confirmation' : 'error'}">${sanitizedEmail}</span>`)
       }
       this.userDataSource = new MatTableDataSource(this.userDataSource)
       this.userDataSource.paginator = this.paginatorUsers
@@ -65,7 +67,9 @@ export class AdministrationComponent implements OnInit {
     this.feedbackService.find().subscribe((feedbacks) => {
       this.feedbackDataSource = feedbacks
       for (let feedback of this.feedbackDataSource) {
-        feedback.comment = this.sanitizer.bypassSecurityTrustHtml(feedback.comment)
+        // Sanitize feedback comment to prevent XSS
+        const sanitizedComment = this.sanitizeHtml(feedback.comment)
+        feedback.comment = this.sanitizer.bypassSecurityTrustHtml(sanitizedComment)
       }
       this.feedbackDataSource = new MatTableDataSource(this.feedbackDataSource)
       this.feedbackDataSource.paginator = this.paginatorFeedb
@@ -104,5 +108,15 @@ export class AdministrationComponent implements OnInit {
 
   times (numberOfTimes: number) {
     return Array(numberOfTimes).fill('★')
+  }
+
+  // HTML sanitization method to prevent XSS
+  private sanitizeHtml(html: string): string {
+    if (!html) return ''
+    
+    // Create a temporary DOM element to safely parse and sanitize HTML
+    const div = document.createElement('div')
+    div.textContent = html
+    return div.innerHTML
   }
 }
