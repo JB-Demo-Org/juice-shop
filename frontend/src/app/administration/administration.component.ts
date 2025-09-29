@@ -10,7 +10,7 @@ import { FeedbackService } from '../Services/feedback.service'
 import { MatTableDataSource } from '@angular/material/table'
 import { UserService } from '../Services/user.service'
 import { Component, OnInit, ViewChild, QueryList } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SecurityContext } from '@angular/platform-browser'
 import { dom, library } from '@fortawesome/fontawesome-svg-core'
 import { faArchive, faEye, faHome, faTrashAlt, faUser } from '@fortawesome/free-solid-svg-icons'
 import { MatPaginator } from '@angular/material/paginator'
@@ -49,8 +49,8 @@ export class AdministrationComponent implements OnInit {
       this.userDataSource = users
       this.userDataSourceHidden = users
       for (let user of this.userDataSource) {
-        // Sanitize user email to prevent XSS
-        const sanitizedEmail = this.sanitizeHtml(user.email)
+        // Sanitize user email using Angular's built-in sanitizer
+        const sanitizedEmail = this.sanitizer.sanitize(SecurityContext.HTML, user.email) || ''
         user.email = this.sanitizer.bypassSecurityTrustHtml(`<span class="${user.token ? 'confirmation' : 'error'}">${sanitizedEmail}</span>`)
       }
       this.userDataSource = new MatTableDataSource(this.userDataSource)
@@ -67,8 +67,8 @@ export class AdministrationComponent implements OnInit {
     this.feedbackService.find().subscribe((feedbacks) => {
       this.feedbackDataSource = feedbacks
       for (let feedback of this.feedbackDataSource) {
-        // Sanitize feedback comment to prevent XSS
-        const sanitizedComment = this.sanitizeHtml(feedback.comment)
+        // Sanitize feedback comment using Angular's built-in sanitizer
+        const sanitizedComment = this.sanitizer.sanitize(SecurityContext.HTML, feedback.comment) || ''
         feedback.comment = this.sanitizer.bypassSecurityTrustHtml(sanitizedComment)
       }
       this.feedbackDataSource = new MatTableDataSource(this.feedbackDataSource)
@@ -110,13 +110,4 @@ export class AdministrationComponent implements OnInit {
     return Array(numberOfTimes).fill('★')
   }
 
-  // HTML sanitization method to prevent XSS
-  private sanitizeHtml(html: string): string {
-    if (!html) return ''
-    
-    // Create a temporary DOM element to safely parse and sanitize HTML
-    const div = document.createElement('div')
-    div.textContent = html
-    return div.innerHTML
-  }
 }

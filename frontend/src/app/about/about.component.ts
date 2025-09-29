@@ -4,7 +4,7 @@
  */
 
 import { Component, OnInit } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SecurityContext } from '@angular/platform-browser'
 import { ConfigurationService } from '../Services/configuration.service'
 import { FeedbackService } from '../Services/feedback.service'
 import { IImage } from 'ng-simple-slideshow'
@@ -77,10 +77,12 @@ export class AboutComponent implements OnInit {
   populateSlideshowFromFeedbacks () {
     this.feedbackService.find().subscribe((feedbacks) => {
       for (let i = 0; i < feedbacks.length; i++) {
-        // Sanitize feedback comment to prevent XSS
-        const sanitizedComment = this.sanitizeHtml(feedbacks[i].comment)
-        feedbacks[i].comment = '<span style="width: 90%; display:block;">' + sanitizedComment + '<br/>' + ' (' + this.stars[feedbacks[i].rating] + ')' + '</span>'
-        feedbacks[i].comment = this.sanitizer.bypassSecurityTrustHtml(feedbacks[i].comment)
+        // Sanitize user content properly using Angular's built-in sanitizer
+        const sanitizedComment = this.sanitizer.sanitize(SecurityContext.HTML, feedbacks[i].comment) || ''
+        // Create safe HTML structure by concatenating only with trusted static content
+        const safeHtmlContent = '<span style="width: 90%; display:block;">' + sanitizedComment + '<br/>' + ' (' + this.stars[feedbacks[i].rating] + ')' + '</span>'
+        // Since we've sanitized the user input and only added trusted static HTML, this is now safe
+        feedbacks[i].comment = this.sanitizer.bypassSecurityTrustHtml(safeHtmlContent)
         this.slideshowDataSource.push({ url: this.images[i % this.images.length], caption: feedbacks[i].comment })
       }
     },(err) => {
@@ -88,13 +90,4 @@ export class AboutComponent implements OnInit {
     })
   }
 
-  // HTML sanitization method to prevent XSS
-  private sanitizeHtml(html: string): string {
-    if (!html) return ''
-    
-    // Create a temporary DOM element to safely parse and sanitize HTML
-    const div = document.createElement('div')
-    div.textContent = html
-    return div.innerHTML
-  }
 }

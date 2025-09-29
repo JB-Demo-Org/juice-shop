@@ -4,7 +4,7 @@
  */
 
 import { Component } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SecurityContext } from '@angular/platform-browser'
 import * as jwtDecode from 'jwt-decode'
 
 @Component({
@@ -33,21 +33,12 @@ export class LastLoginIpComponent {
     if (token) {
       payload = jwtDecode(token)
       if (payload.data.lastLoginIp) {
-        // Sanitize last login IP to prevent XSS
-        const sanitizedIp = this.sanitizeHtml(payload.data.lastLoginIp)
+        // Sanitize last login IP using Angular's built-in sanitizer
+        const sanitizedIp = this.sanitizer.sanitize(SecurityContext.HTML, payload.data.lastLoginIp) || ''
         this.lastLoginIp = this.sanitizer.bypassSecurityTrustHtml(`<small>${sanitizedIp}</small>`)
       }
     }
   }
 
-  // HTML sanitization method to prevent XSS
-  private sanitizeHtml(html: string): string {
-    if (!html) return ''
-    
-    // Create a temporary DOM element to safely parse and sanitize HTML
-    const div = document.createElement('div')
-    div.textContent = html
-    return div.innerHTML
-  }
 
 }

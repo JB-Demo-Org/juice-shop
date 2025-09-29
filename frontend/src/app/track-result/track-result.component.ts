@@ -7,7 +7,7 @@ import { ActivatedRoute } from '@angular/router'
 import { MatTableDataSource } from '@angular/material/table'
 import { Component, OnInit } from '@angular/core'
 import { TrackOrderService } from '../Services/track-order.service'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SecurityContext } from '@angular/platform-browser'
 import { dom, library } from '@fortawesome/fontawesome-svg-core'
 import { faHome, faSync, faTruck, faTruckLoading, faWarehouse } from '@fortawesome/free-solid-svg-icons'
 
@@ -39,8 +39,8 @@ export class TrackResultComponent implements OnInit {
   ngOnInit () {
     this.orderId = this.route.snapshot.queryParams.id
     this.trackOrderService.save(this.orderId).subscribe((results) => {
-      // Sanitize order ID to prevent XSS
-      const sanitizedOrderId = this.sanitizeHtml(results.data[0].orderId)
+      // Sanitize order ID using Angular's built-in sanitizer
+      const sanitizedOrderId = this.sanitizer.sanitize(SecurityContext.HTML, results.data[0].orderId) || ''
       this.results.orderNo = this.sanitizer.bypassSecurityTrustHtml(`<code>${sanitizedOrderId}</code>`)
       this.results.email = results.data[0].email
       this.results.totalPrice = results.data[0].totalPrice
@@ -60,13 +60,4 @@ export class TrackResultComponent implements OnInit {
     })
   }
 
-  // HTML sanitization method to prevent XSS
-  private sanitizeHtml(html: string): string {
-    if (!html) return ''
-    
-    // Create a temporary DOM element to safely parse and sanitize HTML
-    const div = document.createElement('div')
-    div.textContent = html
-    return div.innerHTML
-  }
 }

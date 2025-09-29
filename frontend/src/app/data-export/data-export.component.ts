@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core'
 import { FormControl, Validators } from '@angular/forms'
 import { ImageCaptchaService } from '../Services/image-captcha.service'
 import { DataSubjectService } from '../Services/data-subject.service'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SecurityContext } from '@angular/platform-browser'
 
 @Component({
   selector: 'app-data-export',
@@ -43,8 +43,8 @@ export class DataExportComponent implements OnInit {
 
   getNewCaptcha () {
     this.imageCaptchaService.getCaptcha().subscribe((data: any) => {
-      // Sanitize captcha image data to prevent XSS
-      const sanitizedImage = this.sanitizeHtml(data.image)
+      // Sanitize captcha image data using Angular's built-in sanitizer
+      const sanitizedImage = this.sanitizer.sanitize(SecurityContext.HTML, data.image) || ''
       this.captcha = this.sanitizer.bypassSecurityTrustHtml(sanitizedImage)
     })
   }
@@ -99,13 +99,4 @@ export class DataExportComponent implements OnInit {
     }
   }
 
-  // HTML sanitization method to prevent XSS
-  private sanitizeHtml(html: string): string {
-    if (!html) return ''
-    
-    // Create a temporary DOM element to safely parse and sanitize HTML
-    const div = document.createElement('div')
-    div.textContent = html
-    return div.innerHTML
-  }
 }

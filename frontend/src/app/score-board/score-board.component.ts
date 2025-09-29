@@ -4,7 +4,7 @@
  */
 
 import { MatTableDataSource } from '@angular/material/table'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SecurityContext } from '@angular/platform-browser'
 import { ChallengeService } from '../Services/challenge.service'
 import { ConfigurationService } from '../Services/configuration.service'
 import { Component, NgZone, OnInit } from '@angular/core'
@@ -165,8 +165,8 @@ export class ScoreBoardComponent implements OnInit {
   }
 
   trustDescriptionHtml (challenge: Challenge) {
-    // Sanitize challenge description to prevent XSS
-    const sanitizedDescription = this.sanitizeHtml(challenge.description as string)
+    // Sanitize challenge description using Angular's built-in sanitizer
+    const sanitizedDescription = this.sanitizer.sanitize(SecurityContext.HTML, challenge.description as string) || ''
     challenge.description = this.sanitizer.bypassSecurityTrustHtml(sanitizedDescription)
   }
 
@@ -346,13 +346,4 @@ export class ScoreBoardComponent implements OnInit {
     this.localBackupService.restore(file)
   }
 
-  // HTML sanitization method to prevent XSS
-  private sanitizeHtml(html: string): string {
-    if (!html) return ''
-    
-    // Create a temporary DOM element to safely parse and sanitize HTML
-    const div = document.createElement('div')
-    div.textContent = html
-    return div.innerHTML
-  }
 }

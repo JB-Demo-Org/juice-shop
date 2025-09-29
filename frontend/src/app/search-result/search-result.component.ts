@@ -12,7 +12,7 @@ import { MatPaginator } from '@angular/material/paginator'
 import { forkJoin, Subscription } from 'rxjs'
 import { MatTableDataSource } from '@angular/material/table'
 import { MatDialog } from '@angular/material/dialog'
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
+import { DomSanitizer, SafeHtml, SecurityContext } from '@angular/platform-browser'
 import { TranslateService } from '@ngx-translate/core'
 import { SocketIoService } from '../Services/socket-io.service'
 import { SnackBarHelperService } from '../Services/snack-bar-helper.service'
@@ -141,8 +141,8 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
         this.io.socket().emit('verifyLocalXssChallenge', queryParam)
       })
       this.dataSource.filter = queryParam.toLowerCase()
-      // Sanitize query parameter to prevent XSS
-      const sanitizedQueryParam = this.sanitizeHtml(queryParam)
+      // Sanitize query parameter using Angular's built-in sanitizer
+      const sanitizedQueryParam = this.sanitizer.sanitize(SecurityContext.HTML, queryParam) || ''
       this.searchValue = this.sanitizer.bypassSecurityTrustHtml(sanitizedQueryParam)
       this.gridDataSource.subscribe((result: any) => {
         if (result.length === 0) {
@@ -252,13 +252,4 @@ export class SearchResultComponent implements OnDestroy, AfterViewInit {
     return this.deluxeGuard.isDeluxe()
   }
 
-  // HTML sanitization method to prevent XSS
-  private sanitizeHtml(html: string): string {
-    if (!html) return ''
-    
-    // Create a temporary DOM element to safely parse and sanitize HTML
-    const div = document.createElement('div')
-    div.textContent = html
-    return div.innerHTML
-  }
 }

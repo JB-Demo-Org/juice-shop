@@ -11,21 +11,8 @@ const challenges = require('../data/datacache').challenges
 const pug = require('pug')
 const config = require('config')
 const themes = require('../views/themes/themes').themes
+const sanitizeHtml = require('sanitize-html')
 
-// HTML sanitization function to prevent XSS
-function sanitizeHtml(html) {
-  if (!html) return ''
-  return html.toString().replace(/[&<>"']/g, function (match) {
-    const escape = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }
-    return escape[match]
-  })
-}
 
 module.exports = function getUserProfile () {
   return (req, res, next) => {
@@ -66,11 +53,14 @@ module.exports = function getUserProfile () {
             'Content-Security-Policy': CSP
           })
 
-          // Sanitize user data to prevent XSS
+          // Sanitize user data to prevent XSS using sanitize-html library
           const sanitizedUserData = { ...user.dataValues }
           Object.keys(sanitizedUserData).forEach(key => {
             if (typeof sanitizedUserData[key] === 'string') {
-              sanitizedUserData[key] = sanitizeHtml(sanitizedUserData[key])
+              sanitizedUserData[key] = sanitizeHtml(sanitizedUserData[key], {
+                allowedTags: [],
+                allowedAttributes: {}
+              })
             }
           })
           res.send(fn(sanitizedUserData))
